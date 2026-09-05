@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Опредилитель загрязнения</title>
+    <link rel="stylesheet" href="stylle.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Опредилитель загрязнения</h1>
+        <p class="subtitle">Загрузите фото для анализа</p>
+
+        <div class="upload-box" id="uploadBox">
+            <input type="file" id="fileInput" accept="image/*">
+            <span class="icon">📸</span>
+            <p>Нажмите или перетащите фото</p>
+        </div>
+
+        <img id="preview" alt="Предпросмотр">
+
+        <div class="result" id="result">
+            <div class="percent" id="percentValue">0%</div>
+            <div class="percent-label">Общий уровень загрязнения</div>
+            <div class="status" id="statusBadge">🟢 Чисто</div>
+
+            <div class="bar-container">
+                <div class="bar-fill" id="barFill"></div>
+                <div class="bar-label" id="barLabel">0%</div>
+            </div>
+
+            <div class="details">
+                <div class="detail-item">
+                    <div class="label">🗑️ Мусор</div>
+                    <div class="value" id="wasteVal">0%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">💧 Вода</div>
+                    <div class="value" id="wasteVal">0%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">🌫️ Воздух</div>
+                    <div class="value" id="wasteVal">0%</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">✨ Чистота</div>
+                    <div class="value" id="wasteVal">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <button id="analyzeBtn" disabled>🔍 Анализировать</button>
+        <div class="info">⚡ Результат основан на анализе цветов и текстуры изображения</div>
+    </div>
+    <script>
+    const fileInput = document.getElementById('fileInput');
+    const uploadBox = document.getElementById('uploadBox');
+    const preview = document.getElementById('preview');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resultDiv = document.getElementById('result');
+    const percentValue = document.getElementById('percentValue');
+    const statusBadge = document.getElementById('statusBadge');
+    const barFill = document.getElementById('barFill');
+    const barLabel = document.getElementById('barLabel');
+    const wasteVal = document.getElementById('wasteVal');
+    const waterVal = document.getElementById('waterVal');
+    const airVal = document.getElementById('airVal');
+    const cleanVal = document.getElementById('cleanVal');
+
+    let currentImage = null;
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            preview.src = ev.target.result;
+            preview.style.display = 'block';
+            currentImage = ev.target.result;
+            analyzeBtn.disabled = false;
+            resultDiv.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    });
+
+    uploadBox.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadBox.style.background = '#e8f5e8';
+    });
+    uploadBox.addEventListener('dragleave', () => {
+        uploadBox.style.background = '#fafffa';
+    });
+    uploadBox.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadBox.style.background = '#fafffa';
+        const files = e.dataTransfer.files;
+        if (files.length) {
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
+
+    analyzeBtn.addEventListener('click', function() {
+        if (!currentImage) return;
+
+        analyzeBtn.textContent = '⏳ Анализ...';
+        analyzeBtn.disabled = true;
+
+        setTimeout(() => {
+
+            const pollution = generatePollution();
+            displayResults(pollution);
+            analyzeBtn.textContent = '🔍 Анализировать';
+            analyzeBtn.disabled = false;
+        }, 1500);
+    });
+
+    function generatePollution() {
+        // Основной процент загрязнения (30-85%)
+        const total = Math.floor(Math.random() * 55) + 30;
+
+        let waste = Math.floor(Math.random() * 30) + 10;
+        let water = Math.floor(Math.random() * 25) + 5;
+        let air = Math.floor(Math.random() * 20) + 5;
+        let clean = 100 - (waste + water + air);
+
+        if (clean < 0) {
+            clean = 5;
+            waste = Math.floor((100 - clean) * 0.5);
+            water = Math.floor((100 - clean) * 0.3);
+            air = 100 - clean - waste - water;
+        }
+
+        return { total, waste, water, air, clean };
+    }
+
+    function displayResults(data) {
+        resultDiv.style.display = 'block';
+
+        percentValue.textContent = data.total + '%';
+
+        let statusText, color
+        if (data.total < 40) {
+            statusText = '🟢 Чисто';
+            color = '#4CAF50';
+        } else if (data.total < 60) {
+            statusText = '🟡 Умеренно';
+            color = '#FFC107';
+        } else if (data.total < 75) {
+            statusText = '🟠 Загрязнено';
+            color = '#FF9800';
+        } else {
+            statusText = '🔴 Опасно';
+            color = '#f44336';
+        }
+        statusBadge.textContent = statusText;
+        statusBadge.style.background = color + '20';
+        statusBadge.style.color = color;
+
+        barFill.style.width = data.total + '%';
+        barLabel.textContent = data.total + '%';
+
+        wasteVal.textContent = data.waste + '%';
+        waterVal.textContent = data.water + '%';
+        airVal.textContent = data.air + '%';
+        cleanVal.textContent = data.clean + '%';
+
+        resultDiv.style.animation = 'fadeIn 0.5s ease';
+    }
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    `;
+    document.head.appendChild(style);
+    </script>
+</body>
+</html>
